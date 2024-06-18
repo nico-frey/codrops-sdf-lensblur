@@ -4,6 +4,8 @@ uniform vec2 u_mouse;
 uniform vec2 u_resolution;
 uniform float u_time;
 
+float noiseFrequency = 0.1; // Frequency of the noise distortion
+
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
@@ -40,7 +42,7 @@ float snoise(vec2 v) {
     const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
                         0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
                         -0.577350269189626,  // -1.0 + 2.0 * C.x
-                        0.024390243902439); // 1.0 / 41.0
+                        0.024390243902439); // 1.0 / 1.0
     vec2 i = floor(v + dot(v, C.yy));
     vec2 x0 = v - i + dot(i, C.xx);
     vec2 i1;
@@ -53,7 +55,7 @@ float snoise(vec2 v) {
     vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
     m = m * m;
     m = m * m;
-    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 x = 4.0 * fract(p * C.www) - 1.0;
     vec3 h = abs(x) - 0.5;
     vec3 ox = floor(x + 0.5);
     vec3 a0 = x - ox;
@@ -78,11 +80,11 @@ float aastep(float threshold, float value) {
 void main() {
     vec2 pixel = 1.0 / u_resolution.xy;
     vec2 st = st0 + 0.5;
-    vec2 posMouse = mx * vec2(1.0, -1.0) + 0.5;
+    vec2 posMouse = mx * vec2(2.0, -2.0) + 0.1;
 
     // Blob parameters
     float radius = 0.1 + 0.05 * sin(u_time * 0.3);
-    float blurAmount = 0.1; // Increase this value to make the blur bigger
+    float blurAmount = 0.9; // Increase this value to make the blur bigger
 
     // Apply noise to the blob's position for distortion
     vec2 noise = vec2(snoise(vec2(u_time * 0.1, st.x * 5.0)), snoise(vec2(u_time * 0.1, st.y * 5.0)));
@@ -92,9 +94,9 @@ void main() {
     float dist = sdCircle(st, posMouse, radius);
 
     // Blurry blob effect
-    float blob = 0.9 - smoothstep(0.0, blurAmount, dist);
+    float blob = 0.3 - smoothstep(0.0, blurAmount, dist);
 
-    vec3 blobColor = vec3(0.8, 0.9, 0.9); // Set the blob color to blue
+    vec3 blobColor = vec3(0.8, 0.84, 0.82); // Set the blob color to blue
     vec3 backgroundColor = vec3(1.0); // Set the background color to white
 
     vec3 color = mix(backgroundColor, blobColor, blob);
